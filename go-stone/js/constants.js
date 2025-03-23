@@ -63,6 +63,8 @@ const START_POSITIONS = {
 // Translations
 const TRANSLATIONS = {
   EN: {
+    gameName: "Vibe Go-Stone",
+    gameDescription: " is a simple game to play with my 7-year-old daughter. Created in 3 hours of vibe coding.",
     score: "Score",
     difficulty: "Difficulty",
     easy: "Easy",
@@ -87,6 +89,8 @@ const TRANSLATIONS = {
     korean: "한국어"
   },
   KO: {
+    gameName: "알까기",
+    gameDescription: "는 7살 딸아이와 함께 해보려고 만든 간단한 게임입니다. 첫 Vibe 코딩 프로젝트고 총 3시간 가량 걸렸습니다.",
     score: "점수",
     difficulty: "난이도",
     easy: "쉬움",

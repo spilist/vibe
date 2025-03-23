@@ -24,6 +24,12 @@ body {
     position: relative;
 }
 
+.game-description {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
 .game-header {
     display: flex;
     justify-content: space-between;

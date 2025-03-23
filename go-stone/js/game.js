@@ -65,6 +65,59 @@ class Game {
       }
     });
 
+    // Add click/touch event for stone selection
+    this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+    this.canvas.addEventListener('touchstart', (e) => {
+      // Prevent scrolling when interacting with the canvas
+      e.preventDefault();
+      // Convert touch to click event coordinates
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const clickEvent = {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          target: e.target
+        };
+        this.handleCanvasClick(clickEvent);
+      }
+    }, { passive: false });
+
+    // Add event listener for shoot button
+    const shootButton = document.getElementById('shootButton');
+    if (shootButton) {
+      shootButton.addEventListener('click', () => this.flickSelectedStone());
+      shootButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.flickSelectedStone();
+      }, { passive: false });
+    }
+
+    // Add event listeners for aim buttons
+    const aimLeftButton = document.getElementById('aimLeftButton');
+    const aimRightButton = document.getElementById('aimRightButton');
+
+    if (aimLeftButton) {
+      aimLeftButton.addEventListener('click', () => this.adjustAim(-0.1));
+      aimLeftButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.startContinuousAim(-0.1);
+      }, { passive: false });
+      aimLeftButton.addEventListener('touchend', () => {
+        this.stopContinuousAim();
+      });
+    }
+
+    if (aimRightButton) {
+      aimRightButton.addEventListener('click', () => this.adjustAim(0.1));
+      aimRightButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.startContinuousAim(0.1);
+      }, { passive: false });
+      aimRightButton.addEventListener('touchend', () => {
+        this.stopContinuousAim();
+      });
+    }
+
     // Difficulty selector
     const difficultySelect = document.getElementById('difficulty');
     difficultySelect.value = this.currentDifficulty;
@@ -271,10 +324,10 @@ class Game {
 
     switch (e.key) {
       case 'ArrowLeft':
-        this.aimAngle = (this.aimAngle - 0.1) % (2 * Math.PI);
+        this.adjustAim(-0.1);
         break;
       case 'ArrowRight':
-        this.aimAngle = (this.aimAngle + 0.1) % (2 * Math.PI);
+        this.adjustAim(0.1);
         break;
       case 'ArrowUp':
         this.selectPreviousStone();
@@ -542,6 +595,57 @@ class Game {
       this.power -= 0.01;
       if (this.power <= 0) {
         this.powerIncreasing = true;
+      }
+    }
+  }
+
+  // Helper methods for continuous aiming on mobile
+  startContinuousAim(step) {
+    this.stopContinuousAim(); // Clear any existing interval
+    this.aimInterval = setInterval(() => {
+      this.adjustAim(step);
+    }, 50); // Adjust every 50ms
+  }
+
+  stopContinuousAim() {
+    if (this.aimInterval) {
+      clearInterval(this.aimInterval);
+      this.aimInterval = null;
+    }
+  }
+
+  adjustAim(step) {
+    if (this.isGameOver || this.waitingForStonesToStop) return;
+    this.aimAngle = (this.aimAngle + step) % (2 * Math.PI);
+  }
+
+  handleCanvasClick(e) {
+    if (this.isGameOver || this.waitingForStonesToStop) return;
+
+    // Get canvas-relative coordinates
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Scale coordinates if canvas is rendered at a different size than its internal dimensions
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+
+    // Find the clicked stone
+    for (let i = 0; i < this.playerStones.length; i++) {
+      const stone = this.playerStones[i];
+      const distance = Math.sqrt(
+        Math.pow(stone.position.x - canvasX, 2) +
+        Math.pow(stone.position.y - canvasY, 2)
+      );
+
+      // If click is within the stone radius and stone isn't moving
+      if (distance <= GAME_CONFIG.STONE_RADIUS * 1.5 && !this.isStoneMoving(stone)) {
+        this.selectedStoneIndex = i;
+        this.updateStoneAppearance();
+        return;
       }
     }
   }

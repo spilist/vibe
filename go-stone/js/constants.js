@@ -86,7 +86,9 @@ const TRANSLATIONS = {
     close: "Close",
     language: "Language",
     english: "English",
-    korean: "한국어"
+    korean: "한국어",
+    shoot: "Shoot",
+    touchHint: "Tap a stone to select it, use arrows to aim, then tap Shoot"
   },
   KO: {
     gameName: "알까기",
@@ -112,6 +114,8 @@ const TRANSLATIONS = {
     close: "닫기",
     language: "언어",
     english: "English",
-    korean: "한국어"
+    korean: "한국어",
+    shoot: "발사",
+    touchHint: "돌을 탭하여 선택하고, 화살표로 조준한 후 발사 버튼을 탭하세요"
   }
 };

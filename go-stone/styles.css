@@ -82,6 +82,81 @@ canvas {
     color: #555;
 }
 
+/* Mobile controls */
+.mobile-controls {
+    display: none; /* Hidden by default, visible on small screens */
+    margin-top: 15px;
+    text-align: center;
+}
+
+.aim-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.control-button {
+    padding: 12px 16px;
+    font-size: 1.2rem;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.shoot-button {
+    background-color: #e74c3c;
+    padding: 12px 24px;
+    font-weight: bold;
+}
+
+.mobile-hint {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 5px;
+}
+
+/* Media query for mobile devices */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: block;
+    }
+
+    .game-controls p {
+        display: none; /* Hide keyboard instructions on mobile */
+    }
+
+    /* Make buttons larger on small screens */
+    .control-button {
+        padding: 15px 20px;
+        font-size: 1.4rem;
+    }
+
+    .shoot-button {
+        padding: 15px 30px;
+    }
+
+    /* Adjust header layout for smaller screens */
+    .game-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .game-header > div {
+        margin-bottom: 5px;
+    }
+
+    #scoreboardButton {
+        margin-top: 5px;
+    }
+}
+
 button {
     background-color: #4a90e2;
     color: white;

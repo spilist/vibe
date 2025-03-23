@@ -43,6 +43,17 @@
             <button id="scoreboardButton" data-i18n="scoreboard">Scoreboard</button>
         </div>
         <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+        <!-- Mobile Controls -->
+        <div class="mobile-controls">
+            <div class="aim-controls">
+                <button id="aimLeftButton" class="control-button">&larr;</button>
+                <button id="shootButton" class="control-button shoot-button" data-i18n="shoot">Shoot</button>
+                <button id="aimRightButton" class="control-button">&rarr;</button>
+            </div>
+            <p class="mobile-hint" data-i18n="touchHint">Tap a stone to select it, use arrows to aim, then tap Shoot</p>
+        </div>
+
         <div class="game-controls">
             <p data-i18n="controls">Use the Up/Down arrow keys to select a stone, Left/Right to aim, and Spacebar to flick</p>
             <button id="restartButton" data-i18n="restart">Restart</button>

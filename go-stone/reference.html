@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>바둑알 알까기 게임 with Matter.js</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+<body>
+    <canvas id="gameCanvas" width="570" height="570"></canvas>
+    <script>
+        // Matter.js 모듈 가져오기
+        const { Engine, Render, World, Bodies, Body, Events } = Matter;
+
+        // 엔진 및 렌더러 설정
+        const canvas = document.getElementById('gameCanvas');
+        const engine = Engine.create();
+        engine.gravity.y = 0; // 중력 비활성화
+        const render = Render.create({
+            canvas: canvas,
+            engine: engine,
+            options: {
+                width: 570,
+                height: 570,
+                wireframes: false, // 색상으로 렌더링
+                background: '#fff'
+            }
+        });
+
+        // 바둑판 설정
+        const gridSize = 19;
+        const cellSize = 570 / gridSize;
+
+        // 바둑판 격자선 추가
+        const gridLines = [];
+        for (let i = 0; i < gridSize; i++) {
+            gridLines.push(Bodies.rectangle(285, i * cellSize, 570, 1, {
+                isStatic: true,
+                isSensor: true,
+                render: { fillStyle: 'black', strokeStyle: 'black', lineWidth: 1 }
+            }));
+            gridLines.push(Bodies.rectangle(i * cellSize, 285, 1, 570, {
+                isStatic: true,
+                isSensor: true,
+                render: { fillStyle: 'black', strokeStyle: 'black', lineWidth: 1 }
+            }));
+        }
+        World.add(engine.world, gridLines);
+
+        // 바둑판 경계 (벽)
+        const walls = [
+            Bodies.rectangle(285, -10, 570, 20, { isStatic: true, render: { fillStyle: '#000' } }),
+            Bodies.rectangle(285, 580, 570, 20, { isStatic: true, render: { fillStyle: '#000' } }),
+            Bodies.rectangle(-10, 285, 20, 570, { isStatic: true, render: { fillStyle: '#000' } }),
+            Bodies.rectangle(580, 285, 20, 570, { isStatic: true, render: { fillStyle: '#000' } })
+        ];
+        World.add(engine.world, walls);
+
+        // 게임 상태
+        const maxStones = 5;
+        let remainingStones = maxStones;
+        let score = 0;
+        let isFired = false;
+        let aimAngle = 0;
+        let power = 0;
+        let gameOver = false;
+        let firedBall = null; // 발사된 바둑알 추적
+        let lastFiredTime = 0; // 마지막 발사 시간
+        let residualBalls = []; // 잔류 바둑알 리스트
+
+        // 플레이어 바둑알 (검정)
+        let playerBall = Bodies.circle(cellSize * 1 + cellSize / 2, cellSize * 9 + cellSize / 2, cellSize / 2 - 2, {
+            friction: 0.1,
+            frictionAir: 0.02,
+            restitution: 0.3,
+            render: { fillStyle: 'black' }
+        });
+        World.add(engine.world, playerBall);
+
+        // 타겟 바둑알 (회색)
+        const targetBalls = [
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 2 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 4 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 6 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 8 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 10 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 12 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } }),
+            Bodies.circle(cellSize * 17 + cellSize / 2, cellSize * 14 + cellSize / 2, cellSize / 2 - 2, { friction: 0.1, frictionAir: 0.02, restitution: 0.3, render: { fillStyle: 'gray' } })
+        ];
+        World.add(engine.world, targetBalls);
+
+        // 세기 변동
+        function updatePower() {
+            if (!isFired && !gameOver) {
+                power = Math.sin(Date.now() / 500) * 0.5 + 0.5;
+            }
+        }
+
+        // 발사 로직 (스페이스바로 발사)
+        document.addEventListener('keydown', (event) => {
+            if (isFired || gameOver) return;
+            switch (event.key) {
+                case 'ArrowLeft':
+                    aimAngle -= 0.1;
+                    break;
+                case 'ArrowRight':
+                    aimAngle += 0.1;
+                    break;
+                case ' ':
+                    if (remainingStones > 0) {
+                        const speed = power * 0.05 + 0.01;
+                        const force = { x: Math.cos(aimAngle) * speed, y: Math.sin(aimAngle) * speed };
+                        Body.applyForce(playerBall, playerBall.position, force);
+                        firedBall = playerBall; // 발사된 바둑알 추적
+                        isFired = true;
+                        lastFiredTime = Date.now(); // 발사 시간 기록
+                        remainingStones--; // 발사 시점에 카운트 감소
+                    }
+                    break;
+            }
+        });
+
+        // 바둑알 멈춤 감지 및 잔류 바둑알로 전환
+        Events.on(engine, 'beforeUpdate', () => {
+            if (isFired && firedBall) {
+                const timeSinceFired = Date.now() - lastFiredTime;
+                const speed = firedBall.speed;
+                // 발사 후 최소 500ms 동안은 멈춤 감지를 하지 않음
+                if (timeSinceFired > 500 && speed < 0.05) {
+                    isFired = false;
+                    residualBalls.push(firedBall); // 잔류 바둑알로 추가
+                    firedBall = null;
+                    if (remainingStones > 0 && !gameOver) {
+                        playerBall = Bodies.circle(cellSize * 1 + cellSize / 2, cellSize * 9 + cellSize / 2, cellSize / 2 - 2, {
+                            friction: 0.1,
+                            frictionAir: 0.02,
+                            restitution: 0.3,
+                            render: { fillStyle: 'black' }
+                        });
+                        World.add(engine.world, playerBall);
+                    } else {
+                        gameOver = true;
+                    }
+                }
+            }
+        });
+
+        // 충돌 이벤트 처리
+        Events.on(engine, 'collisionStart', (event) => {
+            const pairs = event.pairs;
+            pairs.forEach((pair) => {
+                const { bodyA, bodyB } = pair;
+
+                if (bodyA.isStatic && !bodyA.isSensor || bodyB.isStatic && !bodyB.isSensor) {
+                    const ball = bodyA.isStatic ? bodyB : bodyA;
+                    if (targetBalls.includes(ball)) {
+                        World.remove(engine.world, ball);
+                        targetBalls.splice(targetBalls.indexOf(ball), 1);
+                        score++;
+                    } else if (ball === firedBall) {
+                        World.remove(engine.world, ball);
+                        firedBall = null;
+                        isFired = false;
+                        if (remainingStones > 0 && !gameOver) {
+                            playerBall = Bodies.circle(cellSize * 1 + cellSize / 2, cellSize * 9 + cellSize / 2, cellSize / 2 - 2, {
+                                friction: 0.1,
+                                frictionAir: 0.02,
+                                restitution: 0.3,
+                                render: { fillStyle: 'black' }
+                            });
+                            World.add(engine.world, playerBall);
+                        } else {
+                            gameOver = true;
+                        }
+                    } else if (residualBalls.includes(ball)) {
+                        World.remove(engine.world, ball);
+                        residualBalls.splice(residualBalls.indexOf(ball), 1);
+                    }
+                }
+            });
+        });
+
+        // UI 렌더링 (세기 게이지, 상태 표시)
+        Events.on(render, 'afterRender', () => {
+            const ctx = render.context;
+
+            // 조준 화살표 그리기
+            if (!isFired && !gameOver) {
+                const startX = cellSize * 1 + cellSize / 2;
+                const startY = cellSize * 9 + cellSize / 2;
+                const endX = startX + Math.cos(aimAngle) * cellSize;
+                const endY = startY + Math.sin(aimAngle) * cellSize;
+
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - 10 * Math.cos(aimAngle - Math.PI / 6), endY - 10 * Math.sin(aimAngle - Math.PI / 6));
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - 10 * Math.cos(aimAngle + Math.PI / 6), endY - 10 * Math.sin(aimAngle + Math.PI / 6));
+                ctx.stroke();
+            }
+
+            // 세기 게이지 그리기
+            const gaugeWidth = 100;
+            const gaugeHeight = 10;
+            const gaugeX = 10;
+            const gaugeY = 550;
+
+            ctx.fillStyle = 'lightgray';
+            ctx.fillRect(gaugeX, gaugeY, gaugeWidth, gaugeHeight);
+
+            const color = `rgb(${power * 255}, 0, ${255 - power * 255})`;
+            ctx.fillStyle = color;
+            ctx.fillRect(gaugeX, gaugeY, gaugeWidth * power, gaugeHeight);
+
+            // 상태 표시
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`남은 바둑알: ${remainingStones} | 점수: ${score}`, gaugeX + 110, gaugeY + 10);
+
+            // 게임 오버 표시
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(185, 255, 200, 60);
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`게임 오버 | 점수: ${score}`, 285, 295);
+            }
+        });
+
+        // 게임 루프
+        (function loop() {
+            updatePower();
+            requestAnimationFrame(loop);
+        })();
+
+        // 렌더링 및 엔진 실행
+        Render.run(render);
+        Engine.run(engine);
+    </script>
+</body>
+</html>

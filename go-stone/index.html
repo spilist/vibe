@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Stone Flicking Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Matter.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="score-display"><span data-i18n="score">Score</span>: <span id="score">0</span></div>
+            <div class="language-container">
+                <select id="language">
+                    <option value="EN" data-i18n="english">English</option>
+                    <option value="KO" data-i18n="korean">한국어</option>
+                </select>
+            </div>
+            <div class="difficulty-container">
+                <select id="difficulty">
+                    <option value="EASY" data-i18n="easy">Easy</option>
+                    <option value="MEDIUM" data-i18n="medium">Medium</option>
+                    <option value="HARD" data-i18n="hard">Hard</option>
+                </select>
+            </div>
+            <div class="shots-display"><span data-i18n="shotsLeft">Shots Left</span>: <span id="stones-left">5</span></div>
+            <button id="scoreboardButton" data-i18n="scoreboard">Scoreboard</button>
+        </div>
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div class="game-controls">
+            <p data-i18n="controls">Use the Up/Down arrow keys to select a stone, Left/Right to aim, and Spacebar to flick</p>
+            <button id="restartButton" data-i18n="restart">Restart</button>
+        </div>
+        <div id="gameOver" class="game-over">
+            <h2 data-i18n="gameOver">Game Over!</h2>
+            <p><span data-i18n="yourScore">Your score</span>: <span id="finalScore">0</span></p>
+            <div id="highScoreForm" style="display: none;">
+                <p data-i18n="congrats">Congratulations! You've earned a high score!</p>
+                <label for="playerName" data-i18n="enterName">Enter your name</label>:
+                <input type="text" id="playerName" maxlength="10">
+                <button id="saveScoreButton" data-i18n="saveScore">Save Score</button>
+            </div>
+            <button id="restartAfterGameButton" data-i18n="restart">Restart</button>
+        </div>
+        <div id="scoreboard" class="scoreboard">
+            <h2 data-i18n="highScores">High Scores</h2>
+            <div class="scoreboard-tabs">
+                <button class="tab-button active" data-difficulty="EASY" data-i18n="easy">Easy</button>
+                <button class="tab-button" data-difficulty="MEDIUM" data-i18n="medium">Medium</button>
+                <button class="tab-button" data-difficulty="HARD" data-i18n="hard">Hard</button>
+            </div>
+            <div class="scoreboard-content">
+                <table id="scoreTable">
+                    <thead>
+                        <tr>
+                            <th data-i18n="rank">Rank</th>
+                            <th data-i18n="name">Name</th>
+                            <th data-i18n="score">Score</th>
+                            <th data-i18n="date">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreTableBody">
+                        <!-- Scores will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="closeScoreboard" data-i18n="close">Close</button>
+        </div>
+    </div>
+    <script src="js/constants.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/scoreboard.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

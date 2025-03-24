@@ -46,7 +46,8 @@ const STORAGE_KEYS = {
   SCORES_EASY: 'gostone_scores_easy',
   SCORES_MEDIUM: 'gostone_scores_medium',
   SCORES_HARD: 'gostone_scores_hard',
-  LANGUAGE: 'gostone_language'
+  LANGUAGE: 'gostone_language',
+  AUDIO_ENABLED: 'gostone_audio_enabled'
 };
 
 // Define positions for all 5 player stones
@@ -64,7 +65,7 @@ const START_POSITIONS = {
 const TRANSLATIONS = {
   EN: {
     gameName: "Vibe Go-Stone",
-    gameDescription: " is a simple game to play with my 7-year-old daughter. Created in 3 hours of vibe coding.",
+    gameDescription: " is a simple game to play with my 7-year-old daughter. Created in 4 hours of vibe coding.",
     score: "Score",
     difficulty: "Difficulty",
     easy: "Easy",
@@ -74,7 +75,7 @@ const TRANSLATIONS = {
     scoreboard: "Scoreboard",
     controls: "Use the Up/Down arrow keys to select a stone, Left/Right to aim, and Spacebar to flick",
     restart: "Restart",
-    gameOver: "Game Over!",
+    gameOver: "No Stones Left!",
     yourScore: "Your score",
     congrats: "Congratulations! You've earned a high score!",
     enterName: "Enter your name",
@@ -88,11 +89,13 @@ const TRANSLATIONS = {
     english: "English",
     korean: "한국어",
     shoot: "Shoot",
-    touchHint: "Tap a stone to select it, use arrows to aim, then tap Shoot"
+    touchHint: "Tap a stone to select it, use arrows to aim, then tap Shoot",
+    soundOn: "Sound: ON",
+    soundOff: "Sound: OFF"
   },
   KO: {
     gameName: "알까기",
-    gameDescription: "는 7살 딸아이와 함께 해보려고 만든 간단한 게임입니다. 첫 Vibe 코딩 프로젝트고 총 3시간 가량 걸렸습니다.",
+    gameDescription: "는 7살 딸아이와 함께 해보려고 만든 간단한 게임입니다. 첫 Vibe 코딩 프로젝트고 총 4시간 가량 걸렸습니다.",
     score: "점수",
     difficulty: "난이도",
     easy: "쉬움",
@@ -102,7 +105,7 @@ const TRANSLATIONS = {
     scoreboard: "점수판",
     controls: "위/아래 화살표로 돌 선택, 좌/우 화살표로 조준, 스페이스바로 튕기기",
     restart: "재시작",
-    gameOver: "게임 오버!",
+    gameOver: "남은 바둑알이 없습니다!",
     yourScore: "당신의 점수",
     congrats: "축하합니다! 높은 점수를 기록했습니다!",
     enterName: "이름을 입력하세요",
@@ -116,6 +119,8 @@ const TRANSLATIONS = {
     english: "English",
     korean: "한국어",
     shoot: "발사",
-    touchHint: "돌을 탭하여 선택하고, 화살표로 조준한 후 발사 버튼을 탭하세요"
+    touchHint: "돌을 탭하여 선택하고, 화살표로 조준한 후 발사 버튼을 탭하세요",
+    soundOn: "소리: 켜기",
+    soundOff: "소리: 끄기"
   }
 };

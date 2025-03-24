@@ -26,6 +26,8 @@ class Game {
     this.waitingForStonesToStop = false;
     this.scoreboard = null;
     this.i18n = null;
+    this.audio = null;
+    this.effects = null;
 
     // Disable automatic rendering
     Matter.Render.run(this.render);
@@ -135,6 +137,14 @@ class Game {
     this.i18n = i18n;
   }
 
+  setAudio(audio) {
+    this.audio = audio;
+  }
+
+  setEffects(effects) {
+    this.effects = effects;
+  }
+
   setupCollisionDetection() {
     Matter.Events.on(this.physics.engine, 'collisionStart', (event) => {
       event.pairs.forEach((pair) => {
@@ -148,9 +158,14 @@ class Game {
           // Target stone hits wall - remove and increment score
           if (stone.label === 'target') {
             this.handleTargetRemoval(stone);
+            // Play gain score sound
+            if (this.audio) this.audio.play('gainScore');
           }
           // Player stone hits wall - remove
           else if (stone.label === 'player') {
+            // Play fall sound when a player stone goes out of bounds
+            if (this.audio) this.audio.play('fall');
+
             // Remove the stone from our tracked player stones
             const index = this.playerStones.findIndex(s => s === stone);
             if (index !== -1) {
@@ -178,8 +193,10 @@ class Game {
         // Make target stones non-static when hit by player stones
         if (bodyA.label === 'player' && bodyB.label === 'target') {
           Matter.Body.setStatic(bodyB, false);
+          if (this.audio) this.audio.play('collision');
         } else if (bodyB.label === 'player' && bodyA.label === 'target') {
           Matter.Body.setStatic(bodyA, false);
+          if (this.audio) this.audio.play('collision');
         }
 
         // Handle target stone colliding with another target stone
@@ -187,14 +204,17 @@ class Game {
           // Make sure both target stones are non-static
           if (bodyA.isStatic) Matter.Body.setStatic(bodyA, false);
           if (bodyB.isStatic) Matter.Body.setStatic(bodyB, false);
+          if (this.audio) this.audio.play('collision');
         }
 
         // Handle case where a moving target stone hits a static player stone
         else if (bodyA.label === 'target' && bodyB.label === 'player' && bodyB.isStatic) {
           Matter.Body.setStatic(bodyB, false);
+          if (this.audio) this.audio.play('collision');
         }
         else if (bodyB.label === 'target' && bodyA.label === 'player' && bodyA.isStatic) {
           Matter.Body.setStatic(bodyA, false);
+          if (this.audio) this.audio.play('collision');
         }
       });
     });
@@ -413,61 +433,35 @@ class Game {
   }
 
   flickSelectedStone() {
-    if (this.playerStones.length === 0 ||
-      this.selectedStoneIndex >= this.playerStones.length ||
-      this.shotsRemaining <= 0) return;
+    if (this.isGameOver || this.waitingForStonesToStop || this.shotsRemaining <= 0) return;
 
-    const selectedStone = this.playerStones[this.selectedStoneIndex];
+    // Don't flick if no stones or the selected stone is already moving
+    if (this.playerStones.length === 0 || this.selectedStoneIndex >= this.playerStones.length) return;
+    if (this.isStoneMoving(this.playerStones[this.selectedStoneIndex])) return;
 
-    // Don't allow firing moving stones
-    if (this.isStoneMoving(selectedStone)) return;
+    const stone = this.playerStones[this.selectedStoneIndex];
 
-    // Use the current power value for the flick
-    const speed = this.power * 0.03 + 0.01;
+    // Calculate force based on angle and power
     const force = {
-      x: Math.cos(this.aimAngle) * speed,
-      y: Math.sin(this.aimAngle) * speed
+      x: Math.cos(this.aimAngle) * (0.03 + this.power * 0.07),
+      y: Math.sin(this.aimAngle) * (0.03 + this.power * 0.07)
     };
 
-    Matter.Body.setStatic(selectedStone, false);
-    Matter.Body.applyForce(selectedStone, selectedStone.position, force);
+    // Apply force to the stone
+    Matter.Body.setStatic(stone, false);
+    Matter.Body.applyForce(stone, stone.position, force);
 
-    // Decrease shots remaining
+    // Reduce shots left
     this.shotsRemaining--;
-
-    // Select another stone that's not moving
-    this.selectNextNonMovingStone();
-
-    // Update UI
     this.updateUI();
 
-    // Check if we've used all shots
+    // Select next stone
+    this.selectNextStone();
+
+    // Check if we're out of shots
     if (this.shotsRemaining <= 0) {
       this.waitingForStonesToStop = true;
     }
-  }
-
-  selectNextNonMovingStone() {
-    // Try to find a stone that's not moving
-    let found = false;
-    let attempts = 0;
-    const startIndex = this.selectedStoneIndex;
-
-    while (!found && attempts < this.playerStones.length) {
-      this.selectedStoneIndex = (this.selectedStoneIndex + 1) % this.playerStones.length;
-      const stone = this.playerStones[this.selectedStoneIndex];
-      if (!this.isStoneMoving(stone)) {
-        found = true;
-      }
-      attempts++;
-    }
-
-    if (!found) {
-      // If all stones are moving, just keep the current selection
-      this.selectedStoneIndex = startIndex;
-    }
-
-    this.updateStoneAppearance();
   }
 
   handleTargetRemoval(targetStone) {
@@ -486,11 +480,15 @@ class Game {
     document.getElementById('gameOver').style.display = 'block';
     document.getElementById('finalScore').textContent = this.score;
 
-    // Check if this is a high score
+    // Check if this is a high score and play the appropriate sound
     if (this.scoreboard && this.scoreboard.isHighScore(this.currentDifficulty, this.score)) {
       document.getElementById('highScoreForm').style.display = 'block';
+      // Play tada sound for high score
+      if (this.audio) this.audio.play('tada');
     } else {
       document.getElementById('highScoreForm').style.display = 'none';
+      // Play game over sound
+      if (this.audio) this.audio.play('gameOver');
     }
   }
 

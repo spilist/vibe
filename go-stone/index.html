@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A simple web game created in 3 hours of vibe coding, to play with my 7-year-old daughter.">
+    <meta name="description" content="A simple web game created in 4 hours of vibe coding, to play with my 7-year-old daughter.">
     <link rel="icon" type="image/jpeg" href="docs/images/favicon.ico">
 
     <title>Vibe Go Stone | 알까기</title>
 
     <!-- OG -->
     <meta property="og:title" content="Vibe Go Stone | 알까기">
-    <meta property="og:description" content="A simple web game created in 3 hours of vibe coding, to play with my 7-year-old daughter.">
+    <meta property="og:description" content="A simple web game created in 4 hours of vibe coding, to play with my 7-year-old daughter.">
     <meta property="og:image" content="docs/images/thumbnail.jpg">
     <meta property="og:url" content="https://steady-study-vibe.vercel.app/go-stone/index.html">
 
@@ -21,27 +21,35 @@
 <body>
     <div class="game-container">
         <p class="game-description">
-            <b data-i18n="gameName">Vibe Go-Stone</b><span data-i18n="gameDescription">is a simple game to play with my 7-year-old daughter. Created in 3 hours of vibe coding.
+            <b data-i18n="gameName">Vibe Go-Stone</b><span data-i18n="gameDescription">is a simple game to play with my 7-year-old daughter. Created in 4 hours of vibe coding.
             </span>
         </p>
         <div class="game-header">
-            <div class="score-display"><span data-i18n="score">Score</span>: <span id="score">0</span></div>
-            <div class="language-container">
-                <select id="language">
-                    <option value="EN" data-i18n="english">English</option>
-                    <option value="KO" data-i18n="korean">한국어</option>
-                </select>
+            <div class="flex-row">
+                <div class="language-container">
+                    <select id="language">
+                        <option value="EN" data-i18n="english">English</option>
+                        <option value="KO" data-i18n="korean">한국어</option>
+                    </select>
+                </div>
+                <div class="difficulty-container">
+                    <select id="difficulty">
+                        <option value="EASY" data-i18n="easy">Easy</option>
+                        <option value="MEDIUM" data-i18n="medium">Medium</option>
+                        <option value="HARD" data-i18n="hard">Hard</option>
+                    </select>
+                </div>
             </div>
-            <div class="difficulty-container">
-                <select id="difficulty">
-                    <option value="EASY" data-i18n="easy">Easy</option>
-                    <option value="MEDIUM" data-i18n="medium">Medium</option>
-                    <option value="HARD" data-i18n="hard">Hard</option>
-                </select>
+            <div class="flex-row">
+                <button id="soundToggleButton" data-i18n="soundOn">Sound: ON</button>
+                <button id="scoreboardButton" data-i18n="scoreboard">Scoreboard</button>
             </div>
-            <div class="shots-display"><span data-i18n="shotsLeft">Shots Left</span>: <span id="stones-left">5</span></div>
-            <button id="scoreboardButton" data-i18n="scoreboard">Scoreboard</button>
         </div>
+        <div class="game-header-bottom">
+            <div class="score-display"><span data-i18n="score">Score</span>: <span id="score">0</span></div>
+            <div class="shots-display"><span data-i18n="shotsLeft">Shots Left</span>: <span id="stones-left">5</span></div>
+        </div>
+
         <canvas id="gameCanvas" width="600" height="600"></canvas>
 
         <!-- Mobile Controls -->
@@ -96,6 +104,8 @@
     </div>
     <script src="js/constants.js"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/effects.js"></script>
     <script src="js/physics.js"></script>
     <script src="js/scoreboard.js"></script>
     <script src="js/game.js"></script>

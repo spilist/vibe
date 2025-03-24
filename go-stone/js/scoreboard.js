@@ -8,11 +8,21 @@ class Scoreboard {
 
     this.currentDifficulty = 'EASY';
     this.i18n = null;
+    this.audio = null;
+    this.effects = null;
     this.setupEventListeners();
   }
 
   setI18n(i18n) {
     this.i18n = i18n;
+  }
+
+  setAudio(audio) {
+    this.audio = audio;
+  }
+
+  setEffects(effects) {
+    this.effects = effects;
   }
 
   loadScores(storageKey) {
@@ -50,6 +60,9 @@ class Scoreboard {
     // Sort by score (descending)
     this.scores[difficulty].sort((a, b) => b.score - a.score);
 
+    // Determine rank of the new score
+    const rank = this.scores[difficulty].findIndex(entry => entry.name === name && entry.score === score) + 1;
+
     // Keep only top 5
     if (this.scores[difficulty].length > 5) {
       this.scores[difficulty] = this.scores[difficulty].slice(0, 5);
@@ -57,6 +70,12 @@ class Scoreboard {
 
     this.saveScores(difficulty);
     this.displayScores(difficulty);
+
+    if (this.effects && rank > 0) {
+      this.effects.showHighScoreEffect(rank);
+    }
+
+    return rank;
   }
 
   isHighScore(difficulty, score) {
@@ -87,6 +106,11 @@ class Scoreboard {
       const dateCell = document.createElement('td');
       dateCell.textContent = this.i18n ? this.i18n.formatDate(entry.date) : '';
 
+      // Apply rank styling
+      if (this.effects && index < 3) {
+        this.effects.applyRankStyling(row, index + 1);
+      }
+
       row.appendChild(rankCell);
       row.appendChild(nameCell);
       row.appendChild(scoreCell);
@@ -105,6 +129,20 @@ class Scoreboard {
 
   showScoreboard() {
     document.getElementById('scoreboard').style.display = 'block';
+
+    // Set current difficulty to the game's difficulty
+    if (game && game.currentDifficulty) {
+      this.currentDifficulty = game.currentDifficulty;
+    }
+
+    // Update the active tab to reflect the current difficulty
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('active');
+      if (button.dataset.difficulty === this.currentDifficulty) {
+        button.classList.add('active');
+      }
+    });
+
     this.displayScores(this.currentDifficulty);
   }
 
@@ -141,7 +179,7 @@ class Scoreboard {
       const score = parseInt(document.getElementById('finalScore').textContent);
       const difficulty = game.currentDifficulty;
 
-      this.addScore(difficulty, playerName, score);
+      const rank = this.addScore(difficulty, playerName, score);
       document.getElementById('highScoreForm').style.display = 'none';
 
       this.showScoreboard();
